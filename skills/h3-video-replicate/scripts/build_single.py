@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "dist" / "h3-video-replicate.single.md"
 
 ORDER = [
+    "references/00-menu.md",
     "references/01-intake.md",
     "references/02-slots.md",
     "references/03-timeline.md",
