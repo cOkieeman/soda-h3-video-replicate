@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "h3-video-replicate",
+  "version": "0.1.0",
+  "description": "读取参考视频与参考图，按整数帧分段，逐段输出 MiniMax H3（Timeline Director）复刻用的放图说明和六字段英文提示词。",
+  "author": {
+    "name": "h3-video-replicate contributors"
+  },
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "interface": {
+        "displayName": "H3 视频复刻",
+        "shortDescription": "看参考视频，分段写好 H3 复刻提示词",
+        "defaultPrompt": [
+          "用 $h3-video-replicate 看这个参考视频和参考图，先告诉我分段方案，再逐段给出提示词。"
+        ]
+      }
+    }
+  }
+}

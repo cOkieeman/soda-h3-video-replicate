@@ -1,0 +1,26 @@
+h3-video-replicate
+Copyright 2026 cOkieeman
+
+授权范围
+
+本仓库中本人编写的部分按 Apache License 2.0 授权（全文见 LICENSE）：
+
+- skills/h3-video-replicate/scripts/、tests/
+- 插件清单：plugin.json、.codex-plugin/、.claude-plugin/、.agents/
+- README.md、skills/h3-video-replicate/agents/openai.yaml
+- skills/h3-video-replicate/references/cinematic-layer.md
+
+以下内容不在 Apache License 2.0 授权范围内，权利归原作者：
+
+- skills/h3-video-replicate/references/phrases/ 下的 R 句库：逐字取自 MiniMax H3 教程作者提供的原版视频复刻说明书（鼠标点击换装案例）。
+- skills/h3-video-replicate/SKILL.md、references/01-intake.md 至 references/07-comfyui-wiring.md 中源自该说明书的规则与流程：在原说明书基础上改编。
+- skills/h3-video-replicate/dist/ 下的单文件版：由以上全部内容合并生成。
+
+在取得原作者授权前，上述内容仅供本人私下使用，不得再分发。
+
+第三方参考
+
+- references/cinematic-layer.md 的方法参考 https://github.com/cOkieeman/xiaoyou-aigc-cinematic-director
+  （fork 自 wubo0927/xiaoyou-aigc-cinematic-director）。本文件为改写而非搬运；该仓库未附许可证。
+- 节点规则核对自 ComfyUI-MiniMaxH3-TimelineDirector（https://github.com/Songssx/ComfyUI-MiniMaxH3-TimelineDirector，GPL-3.0）。
+  本仓库不包含其代码。
