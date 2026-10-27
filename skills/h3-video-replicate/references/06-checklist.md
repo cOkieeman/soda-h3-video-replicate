@@ -35,7 +35,7 @@
 **格式**
 
 - [ ] 六字段齐全，顺序为 `subject_definitions` / `summary` / `retention_analysis` / `detailed_description` / `overall_soundscape` / `non_diegetic_music`。
-- [ ] 每段一个独立完整的代码块，代码块前写清时长和素材分配。
+- [ ] 每段一个独立完整的代码块；放图、参考视频、声音、裁剪写在文末导演台设置表，每段一行。
 - [ ] 没有 R/S/Q 编号、占位符、接线说明、裁剪指令混进英文提示词；默认英文提示词，中文仅用于说明。
 - [ ] 没有无内容的质量标签（8K、4K、masterpiece、best quality、ultra detailed、hyper detailed、HDR、epic、stunning、breathtaking、award winning、trending on artstation、sharp focus、insane detail、high resolution）。
 - [ ] 用户的每条“不出现/不可见”硬设定都有对应的排除句。

@@ -30,7 +30,7 @@ class Manifests(unittest.TestCase):
                 seen.add((item["name"], item["version"], item["description"]))
         self.assertEqual(len(seen), 1, seen)
         name, version, _ = seen.pop()
-        self.assertEqual((name, version), ("h3-video-replicate", "0.2.0"))
+        self.assertEqual((name, version), ("h3-video-replicate", "0.3.0"))
 
     def test_codex_overlay_points_at_skills(self):
         self.assertEqual(load(".codex-plugin/plugin.json")["skills"], "./skills/")
@@ -63,7 +63,7 @@ class Skill(unittest.TestCase):
 
     def test_single_file_is_current(self):
         single = (SKILL / "dist" / "h3-video-replicate.single.md").read_text(encoding="utf-8")
-        for marker in ("模板默认分段", "读片命令", "开场菜单"):
+        for marker in ("模板默认分段", "读片命令", "开场菜单", "给用户的导演台操作步骤"):
             self.assertIn(marker, single)
 
 
