@@ -360,7 +360,7 @@ At 00:00.000 the arrow tip draws a rectangle around <Subject 1>: four corner bra
 
 ### R63b · 框选时她的反应
 
-实际表情按 S08，不能因框选默认疑惑。
+实际表情按本次观察记录，不能因框选默认疑惑。
 
 ```text
 While the rectangle closes, the head tilts to one side and the eyes track the corner bracket nearest the face, the brows lift a little, the mouth presses into a small curious line, and both hands stay loose at the sides.
@@ -368,7 +368,7 @@ While the rectangle closes, the head tilts to one side and the eyes track the co
 
 ### R74 · 场景生成时的视线与反应
 
-按原片看向实际生成位置，表情按 S08，不自动惊喜。
+按原片看向实际生成位置，表情按本次观察记录，不自动惊喜。
 
 ```text
 The eyes of <Subject 1> stay on the travelling wire: as the lines run out across the ground and rise into the {{场景结构}}, the head follows them at half the angle, and the reaction runs with the build rather than after it - the mouth opens in a small breath as the first wall rises, then the eyes brighten and the head lifts as the {{招牌与灯具}} light one at a time.

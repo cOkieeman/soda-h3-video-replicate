@@ -1,15 +1,15 @@
 {
-  "name": "h3-video-replicate",
-  "version": "0.3.0",
-  "description": "读取参考视频与参考图，按整数帧分段，逐段输出 MiniMax H3（Timeline Director）复刻用的放图说明和六字段英文提示词。",
+  "name": "soda-h3-video-replicate",
+  "version": "0.4.0",
+  "description": "分析参考视频与参考图，按整数帧分段，逐段编写 MiniMax H3 复刻提示词与 Timeline Director 设置。",
   "interface": {
-    "displayName": "H3 视频复刻 本地插件"
+    "displayName": "Soda H3 视频复刻"
   },
   "plugins": [
     {
-      "name": "h3-video-replicate",
-      "version": "0.3.0",
-      "description": "读取参考视频与参考图，按整数帧分段，逐段输出 MiniMax H3（Timeline Director）复刻用的放图说明和六字段英文提示词。",
+      "name": "soda-h3-video-replicate",
+      "version": "0.4.0",
+      "description": "分析参考视频与参考图，按整数帧分段，逐段编写 MiniMax H3 复刻提示词与 Timeline Director 设置。",
       "source": {
         "source": "local",
         "path": "./"

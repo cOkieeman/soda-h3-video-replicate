@@ -2,7 +2,7 @@
 """MiniMax H3 Timeline Director 分段计算器。
 
 按整数帧和精确分数计算，避免模型心算 ceil / 取整出错。
-规则来源：本机 ComfyUI-MiniMaxH3-TimelineDirector 0.8.0（长度 5+17*n，接缝 0/1/5/22/39/56…，最多 64 段）。
+适用配置：Timeline Director 0.8.0（长度 5+17*n、上限 3592 帧，接缝 0/1/5/22/39/56…，最多 64 段）。
 
 用法：
   python plan_segments.py --seconds 10
@@ -23,10 +23,11 @@ DEFAULT_FPS = 24
 DEFAULT_LENGTH = 107  # 4.4583 s，用户单段上限 4.5 s 内最大的合法长度
 DEFAULT_OVERLAP = 39  # 1.625 s
 MAX_SEGMENTS = 64
+MAX_LENGTH = 3592
 
 
 def legal_length(n: int) -> bool:
-    return n >= 5 and (n - 5) % 17 == 0
+    return 5 <= n <= MAX_LENGTH and (n - 5) % 17 == 0
 
 
 def legal_overlap(n: int) -> bool:
@@ -50,7 +51,7 @@ def plan(total_frames: int, length: int, overlap: int, fps: int):
     if total_frames <= length:
         n = 1
     else:
-        n = 1 + ceil((total_frames - length) / step)
+        n = 1 + ceil(Fraction(total_frames - length, step))
     if n > MAX_SEGMENTS:
         reach = length + (MAX_SEGMENTS - 1) * step
         raise ValueError(
@@ -64,7 +65,7 @@ def plan(total_frames: int, length: int, overlap: int, fps: int):
             ln = length
         else:
             tail = total_frames - start
-            ln = 5 + 17 * max(0, ceil((tail - 5) / 17))
+            ln = 5 + 17 * max(0, ceil(Fraction(tail - 5, 17)))
         segs.append(
             {
                 "gen": i,
@@ -82,7 +83,7 @@ def plan(total_frames: int, length: int, overlap: int, fps: int):
 def check(segs, total_frames, end, pad, length, overlap):
     assert segs[0]["start"] == 0
     for a, b in zip(segs, segs[1:]):
-        assert b["start"] < a["end"], "相邻窗口出现空白"
+        assert b["start"] <= a["end"], "相邻窗口出现空白"
         assert a["end"] - b["start"] == overlap, "重叠与设定不符"
         assert b["start"] > a["start"], "窗口未向前推进"
     for s in segs:
@@ -134,8 +135,10 @@ def main():
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
 
+    if a.fps <= 0:
+        sys.exit("错误：帧率必须 >= 1")
     if not legal_length(a.length):
-        sys.exit(f"错误：常规段长 {a.length} 不是 5+17n（可用 5,22,39,56,73,90,107,…）")
+        sys.exit(f"错误：常规段长 {a.length} 必须为 5+17n 且不超过 {MAX_LENGTH} 帧（可用 5,22,39,56,73,90,107,…）")
     if not legal_overlap(a.overlap):
         sys.exit(f"错误：重叠 {a.overlap} 不是合法接缝（0,1,5,22,39,56,…）")
     if a.overlap >= a.length:
@@ -145,7 +148,10 @@ def main():
         total = a.frames
         seconds = Fraction(total, a.fps)
     else:
-        seconds = Fraction(a.seconds)
+        try:
+            seconds = Fraction(a.seconds)
+        except (ValueError, ZeroDivisionError):
+            sys.exit("错误：时长必须是有效秒数")
         total = ceil(seconds * a.fps)
     if total < 1:
         sys.exit("错误：帧数必须 >= 1")
@@ -159,7 +165,13 @@ def main():
     events = []
     if a.events.strip():
         for tok in a.events.split(","):
-            events.append(map_event(Fraction(tok.strip()), segs, a.fps, total, a.overlap))
+            try:
+                event_time = Fraction(tok.strip())
+            except (ValueError, ZeroDivisionError):
+                sys.exit("错误：事件时刻必须是有效秒数")
+            if event_time < 0:
+                sys.exit("错误：事件时刻不能为负数")
+            events.append(map_event(event_time, segs, a.fps, total, a.overlap))
 
     result = {
         "fps": a.fps,

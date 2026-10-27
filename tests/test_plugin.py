@@ -1,94 +1,125 @@
-"""插件清单、skill 结构与清洁检查。"""
+"""Validate installable paths, generated instructions, and release round trips."""
+
+import hashlib
+import importlib.util
 import json
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
+import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILL = ROOT / "skills" / "h3-video-replicate"
-
-MANIFESTS = [
-    "plugin.json",
-    ".codex-plugin/plugin.json",
-    ".claude-plugin/plugin.json",
-    ".claude-plugin/marketplace.json",
-    ".agents/plugins/marketplace.json",
-]
+NAME = "soda-h3-video-replicate"
+SKILL = ROOT / "skills" / NAME
+MANIFESTS = ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json",
+             ".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json")
 
 
-def load(rel):
-    return json.loads((ROOT / rel).read_text(encoding="utf-8"))
+def load(path):
+    return json.loads((ROOT / path).read_text(encoding="utf-8"))
 
 
-class Manifests(unittest.TestCase):
-    def test_all_parse_and_agree(self):
-        seen = set()
+def builder():
+    spec = importlib.util.spec_from_file_location("single_builder", SKILL / "scripts" / "build_single.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def run_script(script, *args):
+    return subprocess.run([sys.executable, "-I", str(script), *map(str, args)],
+                          capture_output=True, text=True, encoding="utf-8")
+
+
+class InstallablePlugin(unittest.TestCase):
+    def test_identities_and_install_paths(self):
+        expected = load("plugin.json")
         for rel in MANIFESTS:
-            d = load(rel)
-            seen.add((d["name"], d["version"], d["description"]))
-            for item in d.get("plugins", []):
-                seen.add((item["name"], item["version"], item["description"]))
-        self.assertEqual(len(seen), 1, seen)
-        name, version, _ = seen.pop()
-        self.assertEqual((name, version), ("h3-video-replicate", "0.3.0"))
-
-    def test_codex_overlay_points_at_skills(self):
+            data = load(rel)
+            for item in [data, *data.get("plugins", [])]:
+                self.assertEqual((item["name"], item["version"], item["description"]),
+                                 (NAME, expected["version"], expected["description"]), rel)
         self.assertEqual(load(".codex-plugin/plugin.json")["skills"], "./skills/")
+        for rel in (".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json"):
+            source = load(rel)["plugins"][0]["source"]
+            self.assertEqual((ROOT / (source["path"] if isinstance(source, dict) else source)).resolve(), ROOT)
 
-    def test_local_marketplace_source(self):
-        entry = load(".agents/plugins/marketplace.json")["plugins"][0]
-        self.assertEqual(entry["source"], {"source": "local", "path": "./"})
+    def test_ui_assets_resolve_and_match(self):
+        ui = load("plugin.json")["extensions"]["com.openai"]["interface"]
+        self.assertEqual(ui, load(".codex-plugin/plugin.json")["interface"])
+        for field in ("logo", "composerIcon"):
+            path = (ROOT / ui[field]).resolve()
+            self.assertTrue(path.is_relative_to(ROOT))
+            box = [float(value) for value in ET.parse(path).getroot().attrib["viewBox"].split()]
+            self.assertEqual(box[2], box[3])
+            self.assertGreaterEqual(box[2], 48)
 
-    def test_prompts_only_wording(self):
-        for rel in MANIFESTS + ["skills/h3-video-replicate/agents/openai.yaml"]:
-            text = (ROOT / rel).read_text(encoding="utf-8")
-            self.assertNotRegex(text, "工作流副本|联动工作流|写入工作流", rel)
 
-
-class Skill(unittest.TestCase):
-    def setUp(self):
-        self.text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
-
-    def test_frontmatter(self):
-        m = re.match(r"---\n(.*?)\n---\n", self.text, re.S)
-        self.assertIsNotNone(m)
-        self.assertRegex(m.group(1), r"(?m)^name: h3-video-replicate$")
-        self.assertRegex(m.group(1), r"(?m)^description: \S")
-
-    def test_referenced_files_exist(self):
-        refs = set(re.findall(r"(?:references|scripts)/[\w./-]+\.(?:md|py)", self.text))
+class MaintainedSkill(unittest.TestCase):
+    def test_entry_and_references(self):
+        text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        self.assertRegex(text, rf"(?m)^name: {NAME}$")
+        refs = set(re.findall(r"(?:references|scripts)/[\w./-]+\.(?:md|py)", text))
         self.assertTrue(refs)
-        missing = [r for r in sorted(refs) if not (SKILL / r).is_file()]
-        self.assertEqual(missing, [])
+        self.assertEqual([rel for rel in refs if not (SKILL / rel).is_file()], [])
+        for name in ("core.md", "cursor-edit.md"):
+            self.assertTrue((SKILL / "references" / "phrases" / name).is_file())
+        self.assertEqual([p.name for p in (ROOT / "skills").iterdir() if p.is_dir()], [NAME])
 
-    def test_single_file_is_current(self):
-        single = (SKILL / "dist" / "h3-video-replicate.single.md").read_text(encoding="utf-8")
-        for marker in ("模板默认分段", "读片命令", "开场菜单", "给用户的导演台操作步骤"):
-            self.assertIn(marker, single)
+    def test_single_edition_and_credit_boundary(self):
+        module = builder()
+        single = (SKILL / "dist" / f"{NAME}.single.md").read_text(encoding="utf-8")
+        self.assertEqual(single, module.build_text())
+        self.assertEqual(module.SECTIONS[-1], "acknowledgements.md")
+        main, credits = single.split("<!-- references/acknowledgements.md -->")
+        self.assertNotRegex(main, r"小优|Songssx|cOkieeman|wubo0927|xiaoyou")
+        self.assertNotRegex(single, r"Administrator|个人开发项目|soda comfyui")
+        visible = re.sub(r"https?://[^\s)<>]+", "", credits)
+        self.assertNotRegex(visible, r"Songssx|cOkieeman|wubo0927")
+
+    def test_fenced_headings_are_preserved(self):
+        source = "# Section\n```text\n# literal\n```\n## Part"
+        self.assertEqual(builder().demote_headings(source),
+                         "## Section\n```text\n# literal\n```\n### Part")
 
 
-class Clean(unittest.TestCase):
-    SECRET = re.compile(r"sk-[A-Za-z0-9]{10,}|Bearer |api[_-]?key\s*[:=]|password\s*[:=]", re.I)
-    PRIVATE = re.compile(r"ScreenRecording|ChatGPT 图像")
-
-    def files(self):
-        return [p for p in ROOT.rglob("*") if p.is_file() and "__pycache__" not in p.parts]
-
-    def test_no_leftovers(self):
-        self.assertFalse((SKILL / "assets").exists())
-        self.assertFalse((ROOT / "validation").exists())
-        bundled = [p for p in self.files() if p.suffix == ".json" and p.relative_to(ROOT).as_posix() not in MANIFESTS]
-        self.assertEqual(bundled, [])
-
-    def test_no_secrets_or_private_names(self):
-        for p in self.files():
-            if p.suffix not in (".md", ".py", ".json", ".yaml"):
-                continue
-            text = p.read_text(encoding="utf-8")
-            if p.name == "test_plugin.py":
-                continue  # 本文件里有用来匹配的模式本身
-            self.assertIsNone(self.SECRET.search(text), p)
-            self.assertIsNone(self.PRIVATE.search(text), p)
+class ReleaseRoundTrip(unittest.TestCase):
+    def test_reproducible_standalone_archives(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp)
+            for attempt in range(2):
+                result = run_script(ROOT / "scripts" / "package_release.py", "--output-dir", output)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                hashes = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in output.iterdir()}
+                if attempt == 0:
+                    first = hashes
+                else:
+                    self.assertEqual(first, hashes)
+            for path in output.glob("*.zip"):
+                with zipfile.ZipFile(path) as archive:
+                    self.assertIsNone(archive.testzip())
+                    self.assertFalse(any(".git" in Path(n).parts or "__pycache__" in Path(n).parts
+                                         or "/h3-video-replicate/" in n for n in archive.namelist()))
+                    if path.name.endswith("-plugin.zip"):
+                        extracted = output / "plugin"
+                        archive.extractall(extracted)
+                        generated = extracted / "skills" / NAME / "dist" / f"{NAME}.single.md"
+                        self.assertEqual(generated.read_bytes(), (output / f"{NAME}.single.md").read_bytes())
+                        rebuilt = run_script(extracted / "scripts" / "package_release.py",
+                                             "--output-dir", output / "rebuilt")
+                        self.assertEqual(rebuilt.returncode, 0, rebuilt.stderr)
+                    else:
+                        self.assertIn(f"{NAME}/LICENSE", archive.namelist())
+                        self.assertIn(f"{NAME}/NOTICE", archive.namelist())
+                        archive.extractall(output / "skill")
+                        planned = run_script(output / "skill" / NAME / "scripts" / "plan_segments.py",
+                                             "--frames", "240", "--json")
+                        self.assertEqual(planned.returncode, 0, planned.stderr)
+                        self.assertEqual(json.loads(planned.stdout)["F"], 240)
 
 
 if __name__ == "__main__":

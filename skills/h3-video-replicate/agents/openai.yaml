@@ -1,4 +1,0 @@
-interface:
-  display_name: "H3 视频复刻"
-  short_description: "看参考视频，分段写好 H3 复刻提示词"
-  default_prompt: "用 $h3-video-replicate，先列出能做哪几种，我选了再告诉我要准备什么。"

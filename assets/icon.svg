@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Soda H3">
+  <rect width="128" height="128" rx="30" fill="#122D32"/>
+  <rect x="24" y="46" width="80" height="58" rx="15" fill="#72DFCC"/>
+  <path d="M56 59v32l27-16z" fill="#122D32"/>
+  <circle cx="43" cy="31" r="8" fill="#F5DF89"/>
+  <circle cx="70" cy="23" r="5" fill="#72DFCC"/>
+  <circle cx="88" cy="34" r="6" fill="#F5DF89"/>
+  <path d="M34 99h60" stroke="#41B6A6" stroke-width="4" stroke-linecap="round"/>
+</svg>

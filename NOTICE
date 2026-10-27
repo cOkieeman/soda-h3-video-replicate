@@ -1,26 +1,28 @@
-h3-video-replicate
-Copyright 2026 cOkieeman
+Soda H3 视频复刻
+Copyright 2026 Soda contributors
 
-授权范围
+当前发行文件
 
-本仓库中本人编写的部分按 Apache License 2.0 授权（全文见 LICENSE）：
+0.4.0 发行文件中的 Soda 脚本、测试、插件清单、原创图标、README 和重新编写的
+技能说明按 Apache License 2.0 提供，全文见 LICENSE。第三方教程内容不纳入此声明。
 
-- skills/h3-video-replicate/scripts/、tests/
-- 插件清单：plugin.json、.codex-plugin/、.claude-plugin/、.agents/
-- README.md、skills/h3-video-replicate/agents/openai.yaml
-- skills/h3-video-replicate/references/cinematic-layer.md
+原教程内容
 
-以下内容不在 Apache License 2.0 授权范围内，权利归原作者：
+本项目维护者已获得原作者允许，可公开发布本技能及其中的教程原文。
+skills/soda-h3-video-replicate/references/phrases/ 中保留了经授权的条件句库，
+生成的单文件版也包含这些内容。教程原文与句库的权利仍归原作者，
+Apache-2.0 声明不覆盖这些内容，也不扩大原作者授予的权利。
 
-- skills/h3-video-replicate/references/phrases/ 下的 R 句库：逐字取自 MiniMax H3 教程作者提供的原版视频复刻说明书（鼠标点击换装案例）。
-- skills/h3-video-replicate/SKILL.md、references/01-intake.md 至 references/07-comfyui-wiring.md 中源自该说明书的规则与流程：在原说明书基础上改编。
-- skills/h3-video-replicate/dist/ 下的单文件版：由以上全部内容合并生成。
+发行包不包含上游节点代码、模型权重或人物媒体素材。
+第三方作者称呼、项目链接与参考关系集中见：
+skills/soda-h3-video-replicate/references/acknowledgements.md；
+独立技能包中的对应位置为 references/acknowledgements.md。
 
-在取得原作者授权前，上述内容仅供本人私下使用，不得再分发。
+版本边界
 
-第三方参考
+旧提交中的 NOTICE 记录的是取得本次公开发布授权前的状态。
+0.4.0 重新整理了入口、参考文档与品牌信息，并保留经授权的句库。
+本声明不把上游作品转为 Soda 原创，也不将第三方内容重新许可为 Apache-2.0。
 
-- references/cinematic-layer.md 的方法参考 https://github.com/cOkieeman/xiaoyou-aigc-cinematic-director
-  （fork 自 wubo0927/xiaoyou-aigc-cinematic-director）。本文件为改写而非搬运；该仓库未附许可证。
-- 节点规则核对自 ComfyUI-MiniMaxH3-TimelineDirector（https://github.com/Songssx/ComfyUI-MiniMaxH3-TimelineDirector，GPL-3.0）。
-  本仓库不包含其代码。
+生成式工具的输出质量与具体素材、模型和节点设置有关。发行文件的工程验证
+不能替代实际视频生成和画面审阅。
